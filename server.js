@@ -2,10 +2,12 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config()
+const TelegramBot = require("node-telegram-bot-api");
+const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: false });
 const app = express();
 
 app.use(express.json());
-app.use(cors());
+app.use(cors("*"));
 
 // 💾 MongoDB ulash (MongoDB Atlas yoki Local)
 mongoose.connect(process.env.MONGO_URL, {
@@ -44,7 +46,7 @@ app.post("/clients", async (req, res) => {
 
 // 📥 Barcha mijozlar
 app.get("/clients", async (req, res) => {
-  const clients = await Client.find().sort({ createdAt: -1 });
+  const clients = await Client.find();
   res.json(clients);
 });
 
@@ -79,6 +81,49 @@ app.delete("/clients/:id", async (req, res) => {
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+
+let ADMIN_CHAT_ID = 2043384301
+async function notifyAdminIfOilChangeDue() {
+  let today = new Date();
+
+  console.log(today)
+  
+  const dueUsers = await Client.find({
+    nextChangeAt: { $lte: today }
+  });
+
+
+  if (dueUsers.length === 0) {
+    console.log("Bugun moy almashtiradigan mashina yo‘q.");
+    return;
+  }
+
+  for (const user of dueUsers) {
+    const message = `
+🚗 Mashina: ${user.carBrand} / ${user.carNumber}
+🛢 Moy markasi: ${user.oilBrand}
+👤 Egasi: ${user.name}
+📱 Tel: ${user.phone}
+📆 Bugun moy almashtirish sanasi keldi!
+    `.trim();
+
+    try {
+      await bot.sendMessage(ADMIN_CHAT_ID, message);
+      console.log(`✅ Adminga yuborildi: ${user.name}`);
+    } catch (err) {
+      console.error("❌ Telegram xatoligi:", err.message);
+    }
+  }
+}
+  notifyAdminIfOilChangeDue();
+
+const cron = require("node-cron");
+
+cron.schedule("0 9 * * *", () => {
+  notifyAdminIfOilChangeDue();
+  // bugun bir marta ishga tushdi
 });
 
 // 🚀 Serverni ishga tushurish
