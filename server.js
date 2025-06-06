@@ -1,13 +1,13 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
-require("dotenv").config()
+require("dotenv").config();
 const TelegramBot = require("node-telegram-bot-api");
 const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: false });
 const app = express();
 
 app.use(express.json());
-app.use(cors("*"));
+app.use(cors({origin:"https://oilprojects.netlify.app/"}));
 
 // 💾 MongoDB ulash (MongoDB Atlas yoki Local)
 mongoose.connect(process.env.MONGO_URL, {
@@ -19,16 +19,19 @@ db.on("error", console.error.bind(console, "MongoDB xatosi:"));
 db.once("open", () => console.log("MongoDB ulandi ✅"));
 
 // 📦 Mijoz modeli (bitta schema)
-const clientSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  phone: { type: String, required: true },
-  carNumber: { type: String, required: true },
-  carBrand: { type: String, required: true },
-  klameter: { type: String, required: true },
-  oilBrand: { type: String, required: true },
-  filledAt: { type: Date, required: true },
-  nextChangeAt: { type: Date, required: true },
-}, { timestamps: true });
+const clientSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    phone: { type: String, required: true },
+    carNumber: { type: String, required: true },
+    carBrand: { type: String, required: true },
+    klameter: { type: String, required: true },
+    oilBrand: { type: String, required: true },
+    filledAt: { type: Date, required: true },
+    nextChangeAt: { type: Date, required: true },
+  },
+  { timestamps: true }
+);
 
 const Client = mongoose.model("Client", clientSchema);
 
@@ -65,7 +68,9 @@ app.get("/clients/:id", async (req, res) => {
 // ✏️ Mijozni tahrirlash
 app.put("/clients/:id", async (req, res) => {
   try {
-    const updated = await Client.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updated = await Client.findByIdAndUpdate(req.params.id, req.body, {
+      new: true,
+    });
     if (!updated) return res.status(404).json({ error: "Topilmadi" });
     res.json(updated);
   } catch (err) {
@@ -84,17 +89,15 @@ app.delete("/clients/:id", async (req, res) => {
   }
 });
 
-
-let ADMIN_CHAT_ID = 2043384301
+let ADMIN_CHAT_ID = 2043384301;
 async function notifyAdminIfOilChangeDue() {
   let today = new Date();
 
-  console.log(today)
-  
-  const dueUsers = await Client.find({
-    nextChangeAt: { $lte: today }
-  });
+  console.log(today);
 
+  const dueUsers = await Client.find({
+    nextChangeAt: { $lte: today },
+  });
 
   if (dueUsers.length === 0) {
     console.log("Bugun moy almashtiradigan mashina yo‘q.");
@@ -121,15 +124,15 @@ async function notifyAdminIfOilChangeDue() {
     }
   }
 }
-  notifyAdminIfOilChangeDue();
+notifyAdminIfOilChangeDue();
 
 const cron = require("node-cron");
 
 cron.schedule("0 9 * * *", () => {
   notifyAdminIfOilChangeDue();
-  // bugun bir marta ishga tushdi
 });
 
-// 🚀 Serverni ishga tushurish
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server ishga tushdi: http://localhost:${PORT}`));
+app.listen(PORT, () =>
+  console.log(`Server ishga tushdi: http://localhost:${PORT}`)
+);
