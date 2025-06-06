@@ -24,6 +24,7 @@ const clientSchema = new mongoose.Schema({
   phone: { type: String, required: true },
   carNumber: { type: String, required: true },
   carBrand: { type: String, required: true },
+  klameter: { type: String, required: true },
   oilBrand: { type: String, required: true },
   filledAt: { type: Date, required: true },
   nextChangeAt: { type: Date, required: true },
@@ -106,6 +107,9 @@ async function notifyAdminIfOilChangeDue() {
 🛢 Moy markasi: ${user.oilBrand}
 👤 Egasi: ${user.name}
 📱 Tel: ${user.phone}
+📆 Quyilgan sanasi: ${user.filledAt}
+📆 Alishtirish sanasi: ${user.nextChangeAt} 
+📏 Kilometer : ${user.klameter}
 📆 Bugun moy almashtirish sanasi keldi!
     `.trim();
 
