@@ -7,7 +7,7 @@ const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: false });
 const app = express();
 
 app.use(express.json());
-app.use(cors({origin:"https://oilprojects.netlify.app"}));
+app.use(cors({origin:["https://oilprojects.netlify.app","*"]}));
 
 // 💾 MongoDB ulash (MongoDB Atlas yoki Local)
 mongoose.connect(process.env.MONGO_URL, {
@@ -90,6 +90,7 @@ app.delete("/clients/:id", async (req, res) => {
 });
 
 let ADMIN_CHAT_ID = 2043384301;
+
 async function notifyAdminIfOilChangeDue() {
   let today = new Date();
 
@@ -106,24 +107,38 @@ async function notifyAdminIfOilChangeDue() {
 
   for (const user of dueUsers) {
     const message = `
+🆔 ID: ${user._id}
 🚗 Mashina: ${user.carBrand} / ${user.carNumber}
 🛢 Moy markasi: ${user.oilBrand}
 👤 Egasi: ${user.name}
 📱 Tel: ${user.phone}
-📆 Quyilgan sanasi: ${user.filledAt}
-📆 Alishtirish sanasi: ${user.nextChangeAt} 
-📏 Kilometer : ${user.klameter}
+📆 Quyilgan sanasi: ${user.filledAt?.toLocaleDateString?.()}
+📆 Alishtirish sanasi: ${user.nextChangeAt?.toLocaleDateString?.()}
+📏 Kilometer: ${user.klameter}
 📆 Bugun moy almashtirish sanasi keldi!
     `.trim();
 
     try {
-      await bot.sendMessage(ADMIN_CHAT_ID, message);
+      await bot.sendMessage(ADMIN_CHAT_ID, message, {
+        reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "📥 Yuklash",
+                callback_data: `load_${user._id}`, // bu callback orqali siz serverda ishlov berishingiz mumkin
+              },
+            ],
+          ],
+        },
+      });
+
       console.log(`✅ Adminga yuborildi: ${user.name}`);
     } catch (err) {
       console.error("❌ Telegram xatoligi:", err.message);
     }
   }
 }
+
 notifyAdminIfOilChangeDue();
 
 const cron = require("node-cron");
@@ -131,6 +146,7 @@ const cron = require("node-cron");
 cron.schedule("0 9 * * *", () => {
   notifyAdminIfOilChangeDue();
 });
+
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>
