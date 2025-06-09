@@ -7,7 +7,8 @@ const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: false });
 const app = express();
 
 app.use(express.json());
-app.use(cors({origin:["https://oilprojects.netlify.app","*"]}));
+// app.use(cors({origin:["https://oilprojects.netlify.app","*"]}));
+app.use(cors())
 
 // 💾 MongoDB ulash (MongoDB Atlas yoki Local)
 mongoose.connect(process.env.MONGO_URL, {
@@ -29,6 +30,7 @@ const clientSchema = new mongoose.Schema(
     oilBrand: { type: String, required: true },
     filledAt: { type: Date, required: true },
     nextChangeAt: { type: Date, required: true },
+    price:{type:Number,required:true}
   },
   { timestamps: true }
 );
@@ -39,6 +41,8 @@ const Client = mongoose.model("Client", clientSchema);
 
 // ➕ Yangi mijoz qo‘shish
 app.post("/clients", async (req, res) => {
+  console.log(req.body);
+  
   try {
     const client = new Client(req.body);
     await client.save();
