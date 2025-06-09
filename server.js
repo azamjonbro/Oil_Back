@@ -3,14 +3,14 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
 const TelegramBot = require("node-telegram-bot-api");
-const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: false });
+
 const app = express();
+const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: false });
 
 app.use(express.json());
-// app.use(cors({origin:["https://oilprojects.netlify.app","*"]}));
-app.use(cors())
+app.use(cors());
 
-// 💾 MongoDB ulash (MongoDB Atlas yoki Local)
+// ✅ MongoDB ulanishi
 mongoose.connect(process.env.MONGO_URL, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -19,34 +19,80 @@ const db = mongoose.connection;
 db.on("error", console.error.bind(console, "MongoDB xatosi:"));
 db.once("open", () => console.log("MongoDB ulandi ✅"));
 
-// 📦 Mijoz modeli (bitta schema)
+// 📦 Client Schema
 const clientSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     phone: { type: String, required: true },
     carNumber: { type: String, required: true },
     carBrand: { type: String, required: true },
-    klameter: { type: String, required: true },
-    oilBrand: { type: String, required: true },
-    filledAt: { type: Date, required: true },
-    nextChangeAt: { type: Date, required: true },
-    price:{type:Number,required:true}
+
+    history: [
+      {
+        klameter: { type: String, required: true },
+        oilBrand: { type: String, required: true },
+        filledAt: { type: Date, required: true },
+        nextChangeAt: { type: Date, required: true },
+        price: { type: Number, required: true },
+        oilFilter: { type: String, required: true },
+        airFilter: { type: String, required: true },
+        cabinFilter: { type: String, required: true },
+        updatedAt: { type: Date, default: Date.now },
+        notificationDate: { type: Date },
+      },
+    ],
   },
   { timestamps: true }
 );
 
 const Client = mongoose.model("Client", clientSchema);
 
-// 📌 ROUTES — Controller + Router bitta joyda
-
-// ➕ Yangi mijoz qo‘shish
+// ➕ Client qo‘shish yoki `history`ga qo‘shish
 app.post("/clients", async (req, res) => {
-  console.log(req.body);
-  
+  const {
+    name,
+    phone,
+    carNumber,
+    carBrand,
+    klameter,
+    oilBrand,
+    filledAt,
+    nextChangeAt,
+    price,
+    oilFilter,
+    airFilter,
+    cabinFilter,
+  } = req.body;
+
   try {
-    const client = new Client(req.body);
-    await client.save();
-    res.status(201).json(client);
+    let client = await Client.findOne({ name, carNumber });
+
+    const historyItem = {
+      klameter,
+      oilBrand,
+      filledAt,
+      nextChangeAt,
+      price,
+      oilFilter,
+      airFilter,
+      cabinFilter,
+    };
+
+    if (client) {
+      client.history.push(historyItem);
+      await client.save();
+      return res.status(200).json(client);
+    } else {
+      client = new Client({
+        name,
+        phone,
+        carNumber,
+        carBrand,
+        history: [historyItem],
+      });
+      await client.save();
+      return res.status(201).json(client);
+    }
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -69,20 +115,54 @@ app.get("/clients/:id", async (req, res) => {
   }
 });
 
-// ✏️ Mijozni tahrirlash
-app.put("/clients/:id", async (req, res) => {
+// 🕓 Tarix (history) faqat
+app.get("/clients/:id/history", async (req, res) => {
   try {
-    const updated = await Client.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-    if (!updated) return res.status(404).json({ error: "Topilmadi" });
-    res.json(updated);
+    const client = await Client.findById(req.params.id);
+    if (!client) return res.status(404).json({ error: "Topilmadi" });
+    res.json(client.history);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ✏️ Mijozga yangi xizmat (update → history qo‘shish)
+app.put("/clients/:id", async (req, res) => {
+  const {
+    klameter,
+    oilBrand,
+    filledAt,
+    nextChangeAt,
+    price,
+    oilFilter,
+    airFilter,
+    cabinFilter,
+  } = req.body;
+
+  const historyItem = {
+    klameter,
+    oilBrand,
+    filledAt,
+    nextChangeAt,
+    price,
+    oilFilter,
+    airFilter,
+    cabinFilter,
+  };
+
+  try {
+    const client = await Client.findById(req.params.id);
+    if (!client) return res.status(404).json({ error: "Topilmadi" });
+
+    client.history.push(historyItem);
+    await client.save();
+    res.json(client);
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
 });
 
-// ❌ Mijozni o‘chirish
+// ❌ O‘chirish
 app.delete("/clients/:id", async (req, res) => {
   try {
     const deleted = await Client.findByIdAndDelete(req.params.id);
@@ -93,16 +173,21 @@ app.delete("/clients/:id", async (req, res) => {
   }
 });
 
+
 let ADMIN_CHAT_ID = 2043384301;
 
 async function notifyAdminIfOilChangeDue() {
-  let today = new Date();
+const today = new Date();
 
-  console.log(today);
+const allClients = await Client.find(); 
 
-  const dueUsers = await Client.find({
-    nextChangeAt: { $lte: today },
-  });
+const dueUsers = allClients.filter(client => {
+  const history = client.history;
+  if (!history || history.length === 0) return false;
+
+  const latest = history[history.length - 1]; 
+  return latest.notificationDate && latest.notificationDate <= today;
+});
 
   if (dueUsers.length === 0) {
     console.log("Bugun moy almashtiradigan mashina yo‘q.");
