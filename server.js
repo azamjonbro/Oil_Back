@@ -8,7 +8,9 @@ const app = express();
 const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: false });
 
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin:"https://oilprojects.netlify.app"
+}));
 
 // ✅ MongoDB ulanishi
 mongoose.connect(process.env.MONGO_URL, {
