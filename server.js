@@ -181,7 +181,7 @@ app.delete("/clients/:id", async (req, res) => {
   }
 });
 
-let ADMIN_CHAT_ID = 2043384301;
+let ADMIN_CHAT_ID = 231199271;
 
 async function notifyAdminIfOilChangeDue() {
   const today = new Date();
