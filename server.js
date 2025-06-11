@@ -64,6 +64,7 @@ app.post("/clients", async (req, res) => {
     oilFilter,
     airFilter,
     cabinFilter,
+    notificationDate,
   } = req.body;
 
   try {
@@ -74,6 +75,7 @@ app.post("/clients", async (req, res) => {
       oilBrand,
       filledAt,
       nextChangeAt,
+      notificationDate,
       price,
       oilFilter,
       airFilter,
