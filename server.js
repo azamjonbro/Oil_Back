@@ -129,7 +129,7 @@ app.get("/clients/:id/history", async (req, res) => {
 // ✏️ Mijozga yangi xizmat (update → history qo‘shish)
 app.put("/clients/:id", async (req, res) => {
   console.log(req.body);
-  
+
   const {
     filledAt,
     nextChangeAt,
@@ -139,7 +139,7 @@ app.put("/clients/:id", async (req, res) => {
     notificationDate,
     oilFilter,
     airFilter,
-    cabinFilter
+    cabinFilter,
   } = req.body;
 
   const historyItem = {
@@ -157,7 +157,9 @@ app.put("/clients/:id", async (req, res) => {
   try {
     const client = await Client.findById(req.params.id);
     if (!client) return res.status(404).json({ error: "Topilmadi" });
-
+    if (!client.history) {
+      client.history = [];
+    }
     client.history.push(historyItem);
     await client.save();
     res.json(client);
@@ -177,21 +179,20 @@ app.delete("/clients/:id", async (req, res) => {
   }
 });
 
-
 let ADMIN_CHAT_ID = 2043384301;
 
 async function notifyAdminIfOilChangeDue() {
-const today = new Date();
+  const today = new Date();
 
-const allClients = await Client.find(); 
+  const allClients = await Client.find();
 
-const dueUsers = allClients.filter(client => {
-  const history = client.history;
-  if (!history || history.length === 0) return false;
+  const dueUsers = allClients.filter((client) => {
+    const history = client.history;
+    if (!history || history.length === 0) return false;
 
-  const latest = history[history.length - 1]; 
-  return latest.notificationDate && latest.notificationDate <= today;
-});
+    const latest = history[history.length - 1];
+    return latest.notificationDate && latest.notificationDate <= today;
+  });
 
   if (dueUsers.length === 0) {
     console.log("Bugun moy almashtiradigan mashina yo‘q.");
@@ -202,12 +203,12 @@ const dueUsers = allClients.filter(client => {
     const message = `
 🆔 ID: ${user._id}
 🚗 Mashina: ${user.carBrand} / ${user.carNumber}
-🛢 Moy markasi: ${user.oilBrand}
+🛢 Moy markasi: ${user.history[user.history.length-1].oilBrand}
 👤 Egasi: ${user.name}
 📱 Tel: ${user.phone}
-📆 Quyilgan sanasi: ${user.filledAt?.toLocaleDateString?.()}
-📆 Alishtirish sanasi: ${user.nextChangeAt?.toLocaleDateString?.()}
-📏 Kilometer: ${user.klameter}
+📆 Quyilgan sanasi: ${user.history[user.history.length-1].filledAt?.toLocaleDateString?.()}
+📆 Alishtirish sanasi: ${user.history[user.history.length-1].nextChangeAt?.toLocaleDateString?.()}
+📏 Kilometer: ${user.history[user.history.length-1].klameter}
 📆 Bugun moy almashtirish sanasi keldi!
     `.trim();
 
@@ -239,7 +240,6 @@ const cron = require("node-cron");
 cron.schedule("0 9 * * *", () => {
   notifyAdminIfOilChangeDue();
 });
-
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>
