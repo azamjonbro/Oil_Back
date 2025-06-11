@@ -189,13 +189,14 @@ async function notifyAdminIfOilChangeDue() {
   const today = new Date();
 
   const allClients = await Client.find();
-
   const dueUsers = allClients.filter((client) => {
     const history = client.history;
+    console.log(history);
+    
     if (!history || history.length === 0) return false;
 
     const latest = history[history.length - 1];
-    return latest.notificationDate && latest.notificationDate <= today;
+    return latest.notificationDate || latest.notificationDate <= today;
   });
 
   if (dueUsers.length === 0) {
