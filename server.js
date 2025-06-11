@@ -128,26 +128,30 @@ app.get("/clients/:id/history", async (req, res) => {
 
 // ✏️ Mijozga yangi xizmat (update → history qo‘shish)
 app.put("/clients/:id", async (req, res) => {
+  console.log(req.body);
+  
   const {
-    klameter,
-    oilBrand,
     filledAt,
     nextChangeAt,
     price,
+    klameter,
+    oilBrand,
+    notificationDate,
     oilFilter,
     airFilter,
-    cabinFilter,
+    cabinFilter
   } = req.body;
 
   const historyItem = {
-    klameter,
-    oilBrand,
     filledAt,
     nextChangeAt,
     price,
+    notificationDate,
     oilFilter,
     airFilter,
     cabinFilter,
+    klameter,
+    oilBrand,
   };
 
   try {
