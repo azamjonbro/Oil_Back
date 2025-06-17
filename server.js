@@ -184,6 +184,17 @@ app.delete("/clients/:id", async (req, res) => {
 });
 
 let ADMIN_CHAT_ID = 231199271;
+// let ADMIN_CHAT_ID = 2043384301;
+
+function formatDateToDMY(date) {
+  if (!date) return "-";
+  const d = new Date(date);
+  const day = String(d.getDate()).padStart(2, "0");
+  const month = String(d.getMonth() + 1).padStart(2, "0"); // 0-based month
+  const year = d.getFullYear();
+  return `${day}-${month}-${year}`;
+}
+
 
 async function notifyAdminIfOilChangeDue() {
   const today = new Date();
@@ -191,12 +202,16 @@ async function notifyAdminIfOilChangeDue() {
   const allClients = await Client.find();
   const dueUsers = allClients.filter((client) => {
     const history = client.history;
-    console.log(history);
-    
     if (!history || history.length === 0) return false;
 
     const latest = history[history.length - 1];
-    return latest.notificationDate || latest.notificationDate <= today;
+    const notifDate = new Date(latest.notificationDate);
+
+    return (
+      notifDate.getFullYear() === today.getFullYear() &&
+      notifDate.getMonth() === today.getMonth() &&
+      notifDate.getDate() === today.getDate()
+    );
   });
 
   if (dueUsers.length === 0) {
@@ -205,15 +220,18 @@ async function notifyAdminIfOilChangeDue() {
   }
 
   for (const user of dueUsers) {
+    const latest = user.history[user.history.length - 1];
+
     const message = `
 🆔 ID: ${user._id}
 🚗 Mashina: ${user.carBrand} / ${user.carNumber}
-🛢 Moy markasi: ${user.history[user.history.length-1].oilBrand}
+🛢 Moy markasi: ${latest.oilBrand}
 👤 Egasi: ${user.name}
 📱 Tel: ${user.phone}
-📆 Quyilgan sanasi: ${user.history[user.history.length-1].filledAt?.toLocaleDateString?.()}
-📆 Alishtirish sanasi: ${user.history[user.history.length-1].nextChangeAt?.toLocaleDateString?.()}
-📏 Kilometer: ${user.history[user.history.length-1].klameter}
+📆 Quyilgan sanasi: ${formatDateToDMY(latest.filledAt)}
+📆 Alishtirish sanasi: ${formatDateToDMY(latest.nextChangeAt)}
+📏 Kilometer: ${latest.klameter}
+📆 Bildirishnoma sanasi: ${formatDateToDMY(latest.notificationDate)}
 📆 Bugun moy almashtirish sanasi keldi!
     `.trim();
 
@@ -224,7 +242,7 @@ async function notifyAdminIfOilChangeDue() {
             [
               {
                 text: "📥 Yuklash",
-                callback_data: `load_${user._id}`, // bu callback orqali siz serverda ishlov berishingiz mumkin
+                callback_data: `load_${user._id}`,
               },
             ],
           ],
