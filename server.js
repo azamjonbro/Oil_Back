@@ -12,7 +12,6 @@ app.use(cors({
   origin:"https://oilprojects.netlify.app"
 }));
 
-// ✅ MongoDB ulanishi
 mongoose.connect(process.env.MONGO_URL, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
@@ -21,7 +20,7 @@ const db = mongoose.connection;
 db.on("error", console.error.bind(console, "MongoDB xatosi:"));
 db.once("open", () => console.log("MongoDB ulandi ✅"));
 
-// 📦 Client Schema
+
 const clientSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
@@ -49,7 +48,6 @@ const clientSchema = new mongoose.Schema(
 
 const Client = mongoose.model("Client", clientSchema);
 
-// ➕ Client qo‘shish yoki `history`ga qo‘shish
 app.post("/clients", async (req, res) => {
   const {
     name,
@@ -102,13 +100,12 @@ app.post("/clients", async (req, res) => {
   }
 });
 
-// 📥 Barcha mijozlar
 app.get("/clients", async (req, res) => {
   const clients = await Client.find();
   res.json(clients);
 });
 
-// 📄 Bitta mijoz
+
 app.get("/clients/:id", async (req, res) => {
   try {
     const client = await Client.findById(req.params.id);
@@ -119,7 +116,7 @@ app.get("/clients/:id", async (req, res) => {
   }
 });
 
-// 🕓 Tarix (history) faqat
+
 app.get("/clients/:id/history", async (req, res) => {
   try {
     const client = await Client.findById(req.params.id);
@@ -130,7 +127,7 @@ app.get("/clients/:id/history", async (req, res) => {
   }
 });
 
-// ✏️ Mijozga yangi xizmat (update → history qo‘shish)
+
 app.put("/clients/:id", async (req, res) => {
   console.log(req.body);
 
@@ -172,7 +169,6 @@ app.put("/clients/:id", async (req, res) => {
   }
 });
 
-// ❌ O‘chirish
 app.delete("/clients/:id", async (req, res) => {
   try {
     const deleted = await Client.findByIdAndDelete(req.params.id);
@@ -190,7 +186,7 @@ function formatDateToDMY(date) {
   if (!date) return "-";
   const d = new Date(date);
   const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0"); // 0-based month
+  const month = String(d.getMonth() + 1).padStart(2, "0");
   const year = d.getFullYear();
   return `${day}-${month}-${year}`;
 }
