@@ -146,7 +146,7 @@ exports.deleteUser = async (req, res) => {
 //get phone 
 exports.getUserPhoneById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.body.phone);
     if (!user) return res.status(404).json({ error: "Topilmadi" });
     res.json({phone: user.phone});
   } catch (err) {
