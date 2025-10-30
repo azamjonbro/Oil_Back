@@ -22,8 +22,8 @@ async function sendSMS(phone, message) {
   try {
     if (!accessToken) await loginEskiz();
 
-    const res = await axios.post(
-      "https://notify.eskiz.uz/api/message/sms/send",
+    const res = await axios.get(
+      "https://my.eskiz.uz/api/message/sms/send",
       {
         mobile_phone: phone.replace(/\D/g, ""), // faqat raqamlar
         message: message,

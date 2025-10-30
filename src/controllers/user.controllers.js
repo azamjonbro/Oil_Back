@@ -17,9 +17,13 @@ exports.createOrUpdateUser = async (req, res) => {
       airFilter,
       cabinFilter,
       notificationDate,
+      DecreptedSumma
     } = req.body;
 
     let user = await User.findOne({ name, carNumber });
+    let sum = price - DecreptedSumma;
+    sum = Math.round(sum * 0.01); // Calculate 1% of sum and round to nearest integer
+    console.log(sum);
     const historyItem = {
       klameter,
       oilBrand,
@@ -31,9 +35,12 @@ exports.createOrUpdateUser = async (req, res) => {
       airFilter,
       cabinFilter,
     };
+    
+    
 
-    if (user) {
+    if (user){
       user.history.push(historyItem);
+      user.cash+=sum;
       await user.save();
       res.status(200).json(user);
     } else {
@@ -43,6 +50,7 @@ exports.createOrUpdateUser = async (req, res) => {
         carNumber,
         carBrand,
         history: [historyItem],
+        cash: sum
       });
       await user.save();
       res.status(201).json(user);
@@ -92,6 +100,8 @@ exports.addHistory = async (req, res) => {
     oilFilter,
     airFilter,
     cabinFilter,
+    DecreptedSumma
+
   } = req.body;
 
   const historyItem = {
@@ -107,9 +117,14 @@ exports.addHistory = async (req, res) => {
   };
 
   try {
+
     const user = await User.findById(req.params.id);
+
+    let sum = price - DecreptedSumma;
+    sum = Math.round(sum * 0.01);
     if (!user) return res.status(404).json({ error: "Topilmadi" });
     user.history.push(historyItem);
+    user.cash += sum;
     await user.save();
     res.json(user);
   } catch (err) {
