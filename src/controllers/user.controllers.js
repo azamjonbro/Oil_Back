@@ -142,3 +142,42 @@ exports.deleteUser = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+//get phone 
+exports.getUserPhoneById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: "Topilmadi" });
+    res.json({phone: user.phone});
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+//reset cash
+exports.resetUserCashById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: "Topilmadi" });
+    user.cash = 0;
+    await user.save();
+    res.json({message: "Cash reset qilindi ✅"});
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+//decrement cash
+exports.decrementUserCashById = async (req, res) => {
+  const { amount } = req.body;
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: "Topilmadi" });
+    user.cash -= amount;
+    if (user.cash < 0) user.cash = 0;
+    await user.save();
+    res.json({message: "Cash decrement qilindi ✅", cash: user.cash});
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
