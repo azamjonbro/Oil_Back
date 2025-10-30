@@ -8,9 +8,10 @@ const userSchema = new mongoose.Schema(
     carNumber: { type: String, required: true },
     carBrand: { type: String, required: true },
     history: [userHistorySchema],
-    chatId:{type:String}
+    chatId:{type:String},
+    cash:{type:Number, default:0},
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("User", userSchema);
+module.exports = mongoose.model("Clients", userSchema);
