@@ -146,15 +146,32 @@ exports.deleteUser = async (req, res) => {
 //get phone 
 exports.getUserPhoneById = async (req, res) => {
   try {
-    console.log(req.body);
-    
-    const user = await User.findById(req.body.phone);
-    if (!user) return res.status(404).json({ message: "Topilmadi" });
-    res.json({phone: user.phone});
+    const { phone } = req.body;
+
+    if (!phone) {
+      return res.status(400).json({ error: "Telefon raqam yuborilmagan" });
+    }
+
+    console.log("📞 Request phone:", phone);
+
+    // ✅ findById o‘rniga findOne ishlatamiz
+    const user = await User.findOne({ phone: phone });
+
+    if (!user) {
+      return res.status(404).json({ message: "Topilmadi" });
+    }
+
+    res.json({
+      exists: true,
+      phone: user.phone,
+      user: user
+    });
   } catch (err) {
+    console.error("❌ Backend error:", err.message);
     res.status(500).json({ error: err.message });
   }
 };
+
 
 //reset cash
 exports.resetUserCashById = async (req, res) => {
