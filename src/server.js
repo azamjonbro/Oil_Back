@@ -6,9 +6,9 @@ const userRoutes = require("./router/user.router");
 const notifyAdminIfOilChangeDue = require("./utils/notifyAdmin");
 const eskiz = require("./utils/smsService")
 
-// console.log(eskiz.loginEskiz());
+console.log(eskiz.loginEskiz());
 
-// console.log(eskiz.sendSMS("998770057891","salom"))
+console.log(eskiz.sendSMS("+998770057891","salom"))
 
 
 dotenv.config();

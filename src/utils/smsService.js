@@ -11,6 +11,8 @@ async function loginEskiz() {
       password: process.env.ESKIZ_PASSWORD,
     });
     accessToken = res.data.access_token;
+    console.log(res.data.access_token);
+    
     console.log("✅ Eskiz token olindi");
   } catch (err) {
     console.error("❌ Eskiz login xatosi:", err.response?.data || err.message);
@@ -31,12 +33,14 @@ async function sendSMS(phone, message) {
       },
       {
         headers: {
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer 59450|0JpjmV3ITGvlmT1H1NBBhzCewyTXN3p9bxwPlSBY`,
         },
       }
     );
 
     console.log(`📩 SMS yuborildi: ${phone}`);
+    console.log(res.data);
+    
     return res.data;
   } catch (err) {
     if (err.response?.status === 401) {
