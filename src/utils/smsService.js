@@ -11,7 +11,7 @@ async function loginEskiz() {
       password: process.env.ESKIZ_PASSWORD,
     });
     accessToken = res.data.access_token;
-    console.log(res.data.access_token);
+    console.log(res);
     
     console.log("✅ Eskiz token olindi");
   } catch (err) {
