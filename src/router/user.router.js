@@ -9,7 +9,9 @@ const {
   deleteUser,
   decrementUserCashById,
   getUserPhoneById,
-  resetUserCashById
+  resetUserCashById,
+  getChatidById,
+  updateChatId
 } = require("../controllers/user.controllers");
 
 router.post("/", createOrUpdateUser);
@@ -21,5 +23,7 @@ router.delete("/:id", deleteUser);
 router.post("/phone", getUserPhoneById);
 router.post("/:id/reset-cash", resetUserCashById);
 router.post("/:id/decrement-cash", decrementUserCashById);
+router.get("/chatId", getChatidById);
+router.put("/chatId", updateChatId);
 
 module.exports = router;
