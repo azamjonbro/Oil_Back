@@ -200,3 +200,44 @@ exports.decrementUserCashById = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+exports.getChatidById = async (req, res) => {
+  try {
+    const { id } = req.query;
+
+    if (!id) {
+      return res.status(400).json({ error: "ID yuborilmagan" });
+    }
+
+    console.log("💬 Request ID:", id);
+    const user = await User.findOne({ chatId: id });
+
+    if (!user) {
+      return res.status(404).json({ message: "Topilmadi" });
+    }
+
+    res.json({
+      chatId: user.chatId
+    });
+  } catch (err) {
+    console.error("❌ Backend error:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+};  
+
+
+exports.updateChatId = async (req, res) => {
+  try {
+    const { userId, chatId } = req.body;
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ error: "Topilmadi" });
+
+    user.chatId = chatId;
+    await user.save();
+
+    res.json({ message: "Chat ID yangilandi ✅", chatId: user.chatId });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
