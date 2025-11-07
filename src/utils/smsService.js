@@ -6,11 +6,11 @@ let accessToken = null;
 // 🔹 Eskiz bilan login qilish
 async function loginEskiz() {
   try {
-    const res = await axios.post("https://my.eskiz.uz/api/auth/login", {
+    const res = await axios.post("https://notify.eskiz.uz/api/auth/login", {
       email: process.env.ESKIZ_EMAIL,
       password: process.env.ESKIZ_PASSWORD,
     });
-    accessToken = res.data.access_token;
+    accessToken = res.data.data.token;
     console.log(res);
     
     console.log("✅ Eskiz token olindi");
@@ -24,16 +24,16 @@ async function sendSMS(phone, message) {
   try {
     if (!accessToken) await loginEskiz();
 
-    const res = await axios.get(
-      "https://my.eskiz.uz/api/message/sms/send",
+    const res = await axios.post(
+      "https://notify.eskiz.uz/api/message/sms/send",
       {
-        mobile_phone: phone.replace(/\D/g, ""), // faqat raqamlar
+        mobile_phone: phone.replace(/\D/g, ""), 
         message: message,
         from: "4546", // Eskizdan berilgan "sender name" yoki 4546
       },
       {
         headers: {
-          Authorization: `Bearer 59450|0JpjmV3ITGvlmT1H1NBBhzCewyTXN3p9bxwPlSBY`,
+          Authorization: `Bearer ${accessToken}`,
         },
       }
     );
