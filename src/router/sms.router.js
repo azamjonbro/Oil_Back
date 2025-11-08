@@ -5,3 +5,5 @@ const {
 } = require("../utils/smsService");
 
 router.post("/send", sendSMS)
+
+module.exports = router;
