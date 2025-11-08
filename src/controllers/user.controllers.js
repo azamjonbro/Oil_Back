@@ -21,9 +21,13 @@ exports.createOrUpdateUser = async (req, res) => {
     } = req.body;
 
     let user = await User.findOne({ name, carNumber });
-    let sum = price - DecreptedSumma;
-    sum = Math.round(sum * 0.01); // Calculate 1% of sum and round to nearest integer
-    console.log(sum);
+  let priceNum = parseFloat(price) || 0;
+let decSum = parseFloat(DecreptedSumma) || 0;
+
+// hisoblash
+let sum = priceNum - decSum;
+sum = Math.round(sum * 0.01); // 1% ni olish
+console.log(sum);
     const historyItem = {
       klameter,
       oilBrand,
@@ -40,7 +44,7 @@ exports.createOrUpdateUser = async (req, res) => {
 
     if (user){
       user.history.push(historyItem);
-      user.cash+=sum;
+      user.cash = (Number(user.cash) || 0) + sum;
       await user.save();
       res.status(200).json(user);
     } else {
