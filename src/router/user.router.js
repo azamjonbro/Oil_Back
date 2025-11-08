@@ -12,7 +12,8 @@ const {
   resetUserCashById,
   getChatidById,
   updateChatId,
-  getUserBalance
+  getUserBalance,
+  getUserOilHistory
 } = require("../controllers/user.controllers");
 
 router.post("/", createOrUpdateUser);
@@ -21,6 +22,7 @@ router.get("/chatId", getChatidById);
 router.put("/chatId", updateChatId);
 router.get("/getballance", getUserBalance);
 router.post("/phone", getUserPhoneById);
+router.get("/history", getUserOilHistory)
 router.get("/:id", getUserById);
 router.get("/:id/history", getUserHistory);
 router.put("/:id", addHistory);

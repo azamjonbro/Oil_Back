@@ -87,6 +87,17 @@ exports.getUserHistory = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+exports.getUserOilHistory = async (req, res) => {
+  try {
+    const user = await User.findOne({
+      chatId: req.query.chatId,
+    });
+    if (!user) return res.status(404).json({ error: "Topilmadi" });
+    res.json(user.history);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
 
 // 🟢 ADD HISTORY ENTRY
 exports.addHistory = async (req, res) => {
