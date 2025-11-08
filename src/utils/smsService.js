@@ -20,14 +20,16 @@ async function loginEskiz() {
 }
 
 // 🔹 SMS yuborish funksiyasi
-async function sendSMS(phone, message) {
+async function sendSMS(req, res) {
   try {
     if (!accessToken) await loginEskiz();
 
-    const res = await axios.post(
+    const { phoneNumber, message } = req.body;
+
+    const response = await axios.post(
       "https://notify.eskiz.uz/api/message/sms/send",
       {
-        mobile_phone: phone.replace(/\D/g, ""), 
+        mobile_phone: phoneNumber.replace(/\D/g, ""),
         message: message,
         from: "4546", // Eskizdan berilgan "sender name" yoki 4546
       },
@@ -41,11 +43,11 @@ async function sendSMS(phone, message) {
     console.log(`📩 SMS yuborildi: ${phone}`);
     console.log(res.data);
     
-    return res.data;
+    return res.status(200).json({ success: true, data: response.data });
   } catch (err) {
     if (err.response?.status === 401) {
       await loginEskiz();
-      return sendSMS(phone, message);
+      return sendSMS(phoneNumber, message);
     }
     console.error("❌ SMS yuborishda xato:", err.response?.data || err.message);
   }
