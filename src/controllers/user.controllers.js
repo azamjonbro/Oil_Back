@@ -88,6 +88,8 @@ exports.getUserHistory = async (req, res) => {
   }
 };
 exports.getUserOilHistory = async (req, res) => {
+  console.log(req.params.id);
+  
   try {
     const user = await User.findOne({
       chatId: req.query.chatId,
