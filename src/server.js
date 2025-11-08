@@ -21,7 +21,7 @@ connectDB();
 
 // 🔹 Routes
 app.use("/clients", userRoutes);
-app.use("/sms", require("./router/sms.router"));
+app.use("/sms", require("./router/sms.router"));    
 
 // 🔹 Eslatma ishga tushirish
 notifyAdminIfOilChangeDue();

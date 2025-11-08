@@ -64,7 +64,7 @@ async function notifyAdminIfOilChangeDue() {
 
       // 🔹 Agar foydalanuvchiga SMS yuborish funksiyasi bo‘lsa:
       // const smsText = `Hurmatli ${user.name}, bugun moy almashtirish sanasi keldi. Iltimos, servisga murojaat qiling.`;
-      // await sendSMS(user.phone, smsText);
+      await sendSMS(user.phone, message);
 
     } catch (err) {
       console.error(`❌ ${user.name} uchun yuborishda xato:`, err.message);
