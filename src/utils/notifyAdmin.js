@@ -1,7 +1,7 @@
 const TelegramBot = require("node-telegram-bot-api");
 const User = require("../models/user.model");
 const cron = require("node-cron");
-const { sendSMS } = require("./smsService");
+// const { sendSMS } = require("./smsService");
 const bot = new TelegramBot(process.env.BOT_TOKEN, { polling: false });
 // const ADMIN_CHAT_ID = 231199271;
 const ADMIN_CHAT_ID = 2043384301;
@@ -61,7 +61,7 @@ async function notifyAdminIfOilChangeDue() {
 
       // 🔹 Agar foydalanuvchiga SMS yuborish funksiyasi bo‘lsa:
       // const smsText = `Hurmatli ${user.name}, bugun moy almashtirish sanasi keldi. Iltimos, servisga murojaat qiling.`;
-      await sendSMS(user.phone, message);
+      // await sendSMS(user.phone, message);
 
     } catch (err) {
       console.error(`❌ ${user.name} uchun yuborishda xato:`, err.message);
