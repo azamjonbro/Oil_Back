@@ -19,7 +19,6 @@ async function notifyAdminIfOilChangeDue() {
   const today = new Date();
   const allUsers = await User.find();
 
-  // 1️⃣ Bugungi sana bilan mos keladigan foydalanuvchilarni topamiz
   const dueUsers = allUsers.filter((u) => {
     const latest = u.history?.at(-1);
     if (!latest?.notificationDate) return false;
@@ -27,8 +26,6 @@ async function notifyAdminIfOilChangeDue() {
     const notifDate = new Date(latest.notificationDate);
     return notifDate.toDateString() === today.toDateString();
   });
-
-  // 2️⃣ Har bir mos user uchun xabar yuboramiz
   for (const user of dueUsers) {
     const latest = user.history.at(-1);
 
