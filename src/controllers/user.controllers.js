@@ -45,6 +45,8 @@ console.log(sum);
     if (user){
       user.history.push(historyItem);
       user.cash = (Number(user.cash) || 0) + sum;
+      console.log(user.cash);
+      
       await user.save();
       res.status(200).json(user);
     } else {
@@ -270,13 +272,16 @@ exports.updateChatId = async (req, res) => {
 
 exports.getUserBalance = async (req, res) => {
   try {
-    const { id } = req.query;
+    const { chatId } = req.query;
 
-    if (!id) {
+    if (!chatId) {
       return res.status(400).json({ error: "ID yuborilmagan" });
     }
-
-    const user = await User.findOne({chatId: id});
+    console.log(req.query);
+    
+    const user = await User.findOne({chatId: chatId});
+    console.log(user);
+    
     if (!user) return res.status(404).json({ error: "Topilmadi" });
 
     res.json({ balance: user.cash });
