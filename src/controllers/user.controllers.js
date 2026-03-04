@@ -1,6 +1,6 @@
 const User = require("../models/user.model");
 
-// 🟢 CREATE yoki UPDATE USER
+
 exports.createOrUpdateUser = async (req, res) => {
   try {
     const {
@@ -83,7 +83,7 @@ exports.getUserById = async (req, res) => {
   }
 };
 
-// 🟢 GET USER HISTORY
+
 exports.getUserHistory = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);

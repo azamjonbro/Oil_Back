@@ -10,6 +10,8 @@ const userHistorySchema = new mongoose.Schema({
   airFilter: { type: String, required: true },
   cabinFilter: { type: String, required: true },
   updatedAt: { type: Date, default: Date.now },
+  notified: { type: Boolean, default: false },
+  
   notificationDate: { type: Date },
 });
 
