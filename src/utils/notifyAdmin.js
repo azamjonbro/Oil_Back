@@ -3,8 +3,8 @@ const User = require("../models/user.model");
 const cron = require("node-cron");
 // const { sendSMS } = require("./smsService");
 const bot = new TelegramBot("8008874583:AAEgo4-EgI3Eg-QvXngYZI4qXC6Yxc_YgMQ", { polling: false });
-// const ADMIN_CHAT_ID = 231199271;
-const ADMIN_CHAT_ID = 2043384301;
+const ADMIN_CHAT_ID = 231199271;
+// const ADMIN_CHAT_ID = 2043384301;
 
 
 function formatDate(date) {
