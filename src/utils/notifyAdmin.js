@@ -3,8 +3,8 @@ const User = require("../models/user.model");
 const cron = require("node-cron");
 // const { sendSMS } = require("./smsService");
 const bot = new TelegramBot("8008874583:AAEgo4-EgI3Eg-QvXngYZI4qXC6Yxc_YgMQ", { polling: false });
-const ADMIN_CHAT_ID = 231199271;
-// const ADMIN_CHAT_ID = 2043384301;
+// const ADMIN_CHAT_ID = 231199271;
+const ADMIN_CHAT_ID = 2043384301;
 
 
 function formatDate(date) {
@@ -62,8 +62,6 @@ ${message}
 
           console.log(`📨 Adminga yuborildi (chatId yo‘q): ${user.name}`);
         }
-
-        // 🔥 YUBORILGANDAN KEYIN TRUE QILAMIZ
         user.history[latestIndex].notified = true;
         user.markModified("history");
         await user.save();
@@ -75,6 +73,46 @@ ${message}
   }
 
   console.log("✅ Tekshiruv tugadi");
+}
+
+async function notifyPostAdminIfSelectDate(req, res){
+  const { date } = req.body;
+  
+  const users = await User.find({
+    history: {
+      $elemMatch: {
+        notificationDate: { $eq: date },
+      },
+    },
+  });
+  users.forEach(user => {
+    const matchedHistories = user.history.filter(
+      (h) =>
+        h.notificationDate &&
+        new Date(h.notificationDate).toISOString().slice(0, 10) === date
+    );
+
+    matchedHistories.forEach(history => {
+      const message = `
+🆔 ID: ${user._id}
+🚗 Mashina: ${user.carBrand} / ${user.carNumber}
+🛢 Moy markasi: ${history.oilBrand}
+👤 Egasi: ${user.name}
+📱 Tel: ${user.phone}
+📆 Quyilgan sanasi: ${formatDate(history.filledAt)}
+📆 Alishtirish sanasi: ${formatDate(history.nextChangeAt)}
+📏 Kilometer: ${history.klameter}
+📆 Bildirishnoma sanasi: ${formatDate(history.notificationDate)}
+`.trim();
+
+      bot.sendMessage(ADMIN_CHAT_ID, message, {
+        
+      })
+        .then(() => console.log(`Yuborildi: ${user.name}`))
+        .catch(err => console.error(`Xato: ${err.message}`));
+    });
+  });
+
 }
 
 
@@ -187,4 +225,4 @@ async function fixNotifications() {
 }
 
 
-fixNotifications()
+// fixNotifications()
