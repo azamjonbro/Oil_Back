@@ -33,20 +33,33 @@ async function notifyAdminIfOilChangeDue() {
       today.toISOString().slice(0, 10);
 
     if (isToday && latest.notified !== true) {
-      const message = `
-🚗 ${user.carBrand} / ${user.carNumber}
-🛢 Moy: ${latest.oilBrand}
-📆 Almashtirish sanasi: ${formatDate(latest.nextChangeAt)}
-
-Hurmatli ${user.name},
-Bugun moy almashtirish sanasi keldi.
-Iltimos servisga murojaat qiling.
-      `.trim();
+     const message = `
+🆔 ID: ${user._id}
+🚗 Mashina: ${user.carBrand} / ${user.carNumber}
+🛢 Moy markasi: ${user.oilBrand}
+👤 Egasi: ${user.name}
+📱 Tel: ${user.phone}
+📆 Quyilgan sanasi: ${user.filledAt?.toLocaleDateString?.()}
+📆 Alishtirish sanasi: ${user.nextChangeAt?.toLocaleDateString?.()}
+📏 Kilometer: ${user.klameter}
+📆 Bugun moy almashtirish sanasi keldi!
+    `.trim();
 
       try {
         // 🔥 AGAR USERDA CHAT ID BO‘LSA
         if (user.chatId) {
-          await bot.sendMessage(user.chatId, message);
+          await bot.sendMessage(user.chatId, message,{
+            reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "📥 Yuklash",
+                callback_data: `load_${user._id}`, // bu callback orqali siz serverda ishlov berishingiz mumkin
+              },
+            ],
+          ],
+        },
+          });
           console.log(`✅ Userga yuborildi: ${user.name}`);
         } 
         // 🔥 AKS HOLDA ADMINGA
@@ -75,25 +88,38 @@ ${message}
   console.log("✅ Tekshiruv tugadi");
 }
 
-async function notifyPostAdminIfSelectDate(req, res){
-  const { date } = req.body;
-  
-  const users = await User.find({
-    history: {
-      $elemMatch: {
-        notificationDate: { $eq: date },
-      },
-    },
-  });
-  users.forEach(user => {
-    const matchedHistories = user.history.filter(
-      (h) =>
-        h.notificationDate &&
-        new Date(h.notificationDate).toISOString().slice(0, 10) === date
-    );
+async function notifyPostAdminIfSelectDate(req, res) {
+  try {
+    const { date } = req.body;
+    console.log(date);
+    
 
-    matchedHistories.forEach(history => {
-      const message = `
+    const start = new Date(date);
+    const end = new Date(date);
+    end.setDate(end.getDate() + 1);
+
+    const users = await User.find({
+      history: {
+        $elemMatch: {
+          notificationDate: {
+            $gte: start,
+            $lt: end,
+          },
+        },
+      },
+    });
+
+    const delay = ms => new Promise(res => setTimeout(res, ms));
+
+    for (const user of users) {
+      const matchedHistories = user.history.filter(
+        (h) =>
+          h.notificationDate &&
+          new Date(h.notificationDate).toISOString().slice(0, 10) === date
+      );
+
+      for (const history of matchedHistories) {
+        const message = `
 🆔 ID: ${user._id}
 🚗 Mashina: ${user.carBrand} / ${user.carNumber}
 🛢 Moy markasi: ${history.oilBrand}
@@ -105,20 +131,32 @@ async function notifyPostAdminIfSelectDate(req, res){
 📆 Bildirishnoma sanasi: ${formatDate(history.notificationDate)}
 `.trim();
 
-      bot.sendMessage(ADMIN_CHAT_ID, message, {
-        
-      })
-        .then(() => console.log(`Yuborildi: ${user.name}`))
-        .catch(err => console.error(`Xato: ${err.message}`));
-    });
-  });
+        await bot.sendMessage(ADMIN_CHAT_ID, message, {
+          reply_markup: {
+            inline_keyboard: [[{ text: "📥 Yuklash", callback_data: `load_${user._id}` }]],
+          },
+        });
 
+        await delay(100); // rate limitdan qochish
+      }
+    }
+
+    console.log("Yuborildi:", date);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 }
 
 
 cron.schedule("0 9 * * *", notifyAdminIfOilChangeDue);
 
-module.exports = notifyAdminIfOilChangeDue;
+module.exports = {
+  notifyAdminIfOilChangeDue,
+  notifyPostAdminIfSelectDate,
+};
 
 
 
@@ -226,3 +264,6 @@ async function fixNotifications() {
 
 
 // fixNotifications()
+
+
+
