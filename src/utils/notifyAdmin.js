@@ -108,6 +108,8 @@ async function notifyPostAdminIfSelectDate(req, res) {
         },
       },
     });
+    console.log(users);
+    
 
     const delay = ms => new Promise(res => setTimeout(res, ms));
 
