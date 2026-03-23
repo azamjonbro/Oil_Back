@@ -139,7 +139,7 @@ async function notifyPostAdminIfSelectDate(req, res) {
           },
         });
 
-        await delay(100); // rate limitdan qochish
+        await delay(500); // rate limitdan qochish
       }
     }
 
