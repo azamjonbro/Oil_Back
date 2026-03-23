@@ -91,9 +91,9 @@ ${message}
 async function notifyPostAdminIfSelectDate(req, res) {
   try {
     const { date } = req.body;
-    console.log(date);
-    
+    console.log("📅 KELGAN DATE:", date);
 
+    // 📆 DATE RANGE (to‘g‘ri filter)
     const start = new Date(date);
     const end = new Date();
     end.setDate(end.getDate() + 1);
@@ -108,10 +108,11 @@ async function notifyPostAdminIfSelectDate(req, res) {
         },
       },
     });
-    console.log(users);
-    
 
-    const delay = ms => new Promise(res => setTimeout(res, ms));
+    console.log("👥 TOPILGAN USERLAR:", users.length);
+
+    // 📦 HAMMA MESSAGE'LARNI YIG'AMIZ
+    const messages = [];
 
     for (const user of users) {
       const matchedHistories = user.history.filter(
@@ -133,22 +134,44 @@ async function notifyPostAdminIfSelectDate(req, res) {
 📆 Bildirishnoma sanasi: ${formatDate(history.notificationDate)}
 `.trim();
 
-        await bot.sendMessage(ADMIN_CHAT_ID, message, {
-          reply_markup: {
-            inline_keyboard: [[{ text: "📥 Yuklash", callback_data: `load_${user._id}` }]],
-          },
+        messages.push({
+          text: message,
+          userId: user._id,
         });
-
-        await delay(500); // rate limitdan qochish
       }
     }
 
-    console.log("Yuborildi:", date);
+    console.log("📨 YUBORILADIGAN XABARLAR:", messages.length);
 
-    res.json({ success: true });
+    // ⏱ DELAY FUNCTION
+    const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+
+    // 🚀 KETMA-KET YUBORISH (HAR 0.5 SEKUND)
+    for (const msg of messages) {
+      await bot.sendMessage(ADMIN_CHAT_ID, msg.text, {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "📥 Yuklash", callback_data: `load_${msg.userId}` }],
+          ],
+        },
+      });
+
+      await delay(500); // 🔥 0.5 sekund
+    }
+
+    console.log("✅ Yuborildi:", date);
+
+    return res.json({
+      success: true,
+      count: messages.length,
+    });
+
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
+    console.error("❌ ERROR:", err);
+    return res.status(500).json({
+      success: false,
+      error: err.message,
+    });
   }
 }
 
