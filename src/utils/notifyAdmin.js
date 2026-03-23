@@ -95,7 +95,7 @@ async function notifyPostAdminIfSelectDate(req, res) {
     
 
     const start = new Date(date);
-    const end = new Date(date);
+    const end = new Date();
     end.setDate(end.getDate() + 1);
 
     const users = await User.find({
