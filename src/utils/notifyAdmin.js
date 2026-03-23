@@ -3,8 +3,8 @@ const User = require("../models/user.model");
 const cron = require("node-cron");
 // const { sendSMS } = require("./smsService");
 const bot = new TelegramBot("8008874583:AAEgo4-EgI3Eg-QvXngYZI4qXC6Yxc_YgMQ", { polling: false });
-const ADMIN_CHAT_ID = 231199271;
-// const ADMIN_CHAT_ID = 2043384301;
+// const ADMIN_CHAT_ID = 231199271;
+const ADMIN_CHAT_ID = 2043384301;
 
 
 function formatDate(date) {
@@ -33,20 +33,33 @@ async function notifyAdminIfOilChangeDue() {
       today.toISOString().slice(0, 10);
 
     if (isToday && latest.notified !== true) {
-      const message = `
-🚗 ${user.carBrand} / ${user.carNumber}
-🛢 Moy: ${latest.oilBrand}
-📆 Almashtirish sanasi: ${formatDate(latest.nextChangeAt)}
-
-Hurmatli ${user.name},
-Bugun moy almashtirish sanasi keldi.
-Iltimos servisga murojaat qiling.
-      `.trim();
+     const message = `
+🆔 ID: ${user._id}
+🚗 Mashina: ${user.carBrand} / ${user.carNumber}
+🛢 Moy markasi: ${user.oilBrand}
+👤 Egasi: ${user.name}
+📱 Tel: ${user.phone}
+📆 Quyilgan sanasi: ${user.filledAt?.toLocaleDateString?.()}
+📆 Alishtirish sanasi: ${user.nextChangeAt?.toLocaleDateString?.()}
+📏 Kilometer: ${user.klameter}
+📆 Bugun moy almashtirish sanasi keldi!
+    `.trim();
 
       try {
         // 🔥 AGAR USERDA CHAT ID BO‘LSA
         if (user.chatId) {
-          await bot.sendMessage(user.chatId, message);
+          await bot.sendMessage(user.chatId, message,{
+            reply_markup: {
+          inline_keyboard: [
+            [
+              {
+                text: "📥 Yuklash",
+                callback_data: `load_${user._id}`, // bu callback orqali siz serverda ishlov berishingiz mumkin
+              },
+            ],
+          ],
+        },
+          });
           console.log(`✅ Userga yuborildi: ${user.name}`);
         } 
         // 🔥 AKS HOLDA ADMINGA
@@ -62,8 +75,6 @@ ${message}
 
           console.log(`📨 Adminga yuborildi (chatId yo‘q): ${user.name}`);
         }
-
-        // 🔥 YUBORILGANDAN KEYIN TRUE QILAMIZ
         user.history[latestIndex].notified = true;
         user.markModified("history");
         await user.save();
@@ -77,10 +88,75 @@ ${message}
   console.log("✅ Tekshiruv tugadi");
 }
 
+async function notifyPostAdminIfSelectDate(req, res) {
+  try {
+    const { date } = req.body;
+    console.log(date);
+    
+
+    const start = new Date(date);
+    const end = new Date(date);
+    end.setDate(end.getDate() + 1);
+
+    const users = await User.find({
+      history: {
+        $elemMatch: {
+          notificationDate: {
+            $gte: start,
+            $lt: end,
+          },
+        },
+      },
+    });
+
+    const delay = ms => new Promise(res => setTimeout(res, ms));
+
+    for (const user of users) {
+      const matchedHistories = user.history.filter(
+        (h) =>
+          h.notificationDate &&
+          new Date(h.notificationDate).toISOString().slice(0, 10) === date
+      );
+
+      for (const history of matchedHistories) {
+        const message = `
+🆔 ID: ${user._id}
+🚗 Mashina: ${user.carBrand} / ${user.carNumber}
+🛢 Moy markasi: ${history.oilBrand}
+👤 Egasi: ${user.name}
+📱 Tel: ${user.phone}
+📆 Quyilgan sanasi: ${formatDate(history.filledAt)}
+📆 Alishtirish sanasi: ${formatDate(history.nextChangeAt)}
+📏 Kilometer: ${history.klameter}
+📆 Bildirishnoma sanasi: ${formatDate(history.notificationDate)}
+`.trim();
+
+        await bot.sendMessage(ADMIN_CHAT_ID, message, {
+          reply_markup: {
+            inline_keyboard: [[{ text: "📥 Yuklash", callback_data: `load_${user._id}` }]],
+          },
+        });
+
+        await delay(100); // rate limitdan qochish
+      }
+    }
+
+    console.log("Yuborildi:", date);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
+}
+
 
 cron.schedule("0 9 * * *", notifyAdminIfOilChangeDue);
 
-module.exports = notifyAdminIfOilChangeDue;
+module.exports = {
+  notifyAdminIfOilChangeDue,
+  notifyPostAdminIfSelectDate,
+};
 
 
 
@@ -187,4 +263,7 @@ async function fixNotifications() {
 }
 
 
-fixNotifications()
+// fixNotifications()
+
+
+
