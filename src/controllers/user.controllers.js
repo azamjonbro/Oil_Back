@@ -21,13 +21,13 @@ exports.createOrUpdateUser = async (req, res) => {
     } = req.body;
 
     let user = await User.findOne({ name, carNumber });
-  let priceNum = parseFloat(price) || 0;
-let decSum = parseFloat(DecreptedSumma) || 0;
+    let priceNum = parseFloat(price) || 0;
+    let decSum = parseFloat(DecreptedSumma) || 0;
 
-// hisoblash
-let sum = priceNum - decSum;
-sum = Math.round(sum * 0.01); // 1% ni olish
-console.log(sum);
+    // hisoblash
+    let sum = priceNum - decSum;
+    sum = Math.round(sum * 0.01); // 1% ni olish
+    
     const historyItem = {
       klameter,
       oilBrand,
@@ -39,13 +39,13 @@ console.log(sum);
       airFilter,
       cabinFilter,
     };
-    
-    
 
     if (user){
+      if (phone) user.phone = phone;
+      if (carBrand) user.carBrand = carBrand;
+
       user.history.push(historyItem);
-      user.cash = (Number(user.cash) || 0) + sum;
-      console.log(user.cash);
+      user.cash = (Number(user.cash) || 0) - decSum + sum;
       
       await user.save();
       res.status(200).json(user);
@@ -139,11 +139,16 @@ exports.addHistory = async (req, res) => {
 
     const user = await User.findById(req.params.id);
 
-    let sum = price - DecreptedSumma;
+    let priceNum = parseFloat(price) || 0;
+    let decSum = parseFloat(DecreptedSumma) || 0;
+    let sum = priceNum - decSum;
     sum = Math.round(sum * 0.01);
+
     if (!user) return res.status(404).json({ error: "Topilmadi" });
+    
     user.history.push(historyItem);
-    user.cash += sum;
+    user.cash = (Number(user.cash) || 0) - decSum + sum;
+    
     await user.save();
     res.json(user);
   } catch (err) {
