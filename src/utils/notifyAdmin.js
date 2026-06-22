@@ -1,9 +1,52 @@
 const TelegramBot = require("node-telegram-bot-api");
 const User = require("../models/user.model");
 const cron = require("node-cron");
-require("dotenv").config()
-const bot = new TelegramBot("8008874583:AAHJdGIIvo-OsCkJd0ojOY8nw6WtdqhCvpE", { polling: false });
+require("dotenv").config();
+
+const PROXY_LIST = [
+  process.env.SOCKS5_PROXY || "socks5://ramgbocx:1fw8wsyd0xpr@38.154.203.95:5863",
+  "socks5://ramgbocx:1fw8wsyd0xpr@31.59.20.176:6754",
+  "socks5://ramgbocx:1fw8wsyd0xpr@31.56.127.193:7684",
+  "socks5://ramgbocx:1fw8wsyd0xpr@45.38.107.97:6014",
+  "socks5://ramgbocx:1fw8wsyd0xpr@198.105.121.200:6462",
+  "socks5://ramgbocx:1fw8wsyd0xpr@64.137.96.74:6641",
+  "socks5://ramgbocx:1fw8wsyd0xpr@198.23.243.226:6361",
+  "socks5://ramgbocx:1fw8wsyd0xpr@38.154.185.97:6370",
+  "socks5://ramgbocx:1fw8wsyd0xpr@142.111.67.146:5611",
+  "socks5://ramgbocx:1fw8wsyd0xpr@191.96.254.138:6185"
+];
+
+let currentProxyIndex = 0;
+const botOptions = { polling: false };
+
+const { SocksProxyAgent } = require("socks-proxy-agent");
+botOptions.request = {
+  agent: new SocksProxyAgent(PROXY_LIST[currentProxyIndex])
+};
+
+const bot = new TelegramBot(process.env.BOT_TOKEN || "8008874583:AAHJdGIIvo-OsCkJd0ojOY8nw6WtdqhCvpE", botOptions);
 const ADMIN_CHAT_ID = Number(process.env.ADMIN_ID) || 231199271;
+
+// Proxy rotation and retry wrapper for bot.sendMessage
+const originalSendMessage = bot.sendMessage.bind(bot);
+bot.sendMessage = async function(chatId, text, options) {
+  let attempts = 0;
+  while (attempts < PROXY_LIST.length) {
+    try {
+      return await originalSendMessage(chatId, text, options);
+    } catch (err) {
+      console.error(`❌ Bot sendMessage xatosi (Proxy: ${PROXY_LIST[currentProxyIndex]}):`, err.message || err);
+      attempts++;
+      if (attempts < PROXY_LIST.length) {
+        currentProxyIndex = (currentProxyIndex + 1) % PROXY_LIST.length;
+        const nextProxy = PROXY_LIST[currentProxyIndex];
+        console.log(`🔄 Keyingi proxyga o'tilmoqda: ${nextProxy}`);
+        bot.options.request.agent = new SocksProxyAgent(nextProxy);
+      }
+    }
+  }
+  throw new Error("Barcha proksilar orqali yuborish muvaffaqiyatsiz tugadi.");
+};
 
 // ─────────────────────────────────────────
 //  HELPERS
