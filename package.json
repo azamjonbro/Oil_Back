@@ -19,6 +19,7 @@
     "mongoose": "^8.15.1",
     "node-cron": "^4.1.0",
     "node-telegram-bot-api": "^0.66.0",
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "socks-proxy-agent": "^10.1.0"
   }
 }
