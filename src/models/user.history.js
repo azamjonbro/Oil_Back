@@ -11,6 +11,8 @@ const userHistorySchema = new mongoose.Schema({
   cabinFilter: { type: String, required: true },
   updatedAt: { type: Date, default: Date.now },
   notificationDate: { type: Date },
+  cost: { type: Number, default: 0 },
+  master: { type: String, default: "Asosiy usta" },
 });
 
 module.exports = userHistorySchema;
