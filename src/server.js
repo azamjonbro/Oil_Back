@@ -3,8 +3,8 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const connectDB = require("./config/connectDatabase");
 const userRoutes = require("./router/user.router");
-const notifyAdminIfOilChangeDue = require("./utils/notifyAdmin");
-const eskiz = require("./utils/smsService")
+const notif = require("./utils/notifyAdmin");
+// const eskiz = require("./utils/smsService")
 
 // console.log(eskiz.loginEskiz());
 
@@ -21,10 +21,10 @@ connectDB();
 
 // 🔹 Routes
 app.use("/clients", userRoutes);
-app.use("/sms", require("./router/sms.router"));    
+// app.use("/sms", require("./router/sms.router"));    
 
 // 🔹 Eslatma ishga tushirish
-notifyAdminIfOilChangeDue();
+notif.notifyAdminIfOilChangeDue();
 
 const PORT = process.env.PORT || 7766;
 app.listen(PORT, () =>

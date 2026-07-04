@@ -1,6 +1,6 @@
 const User = require("../models/user.model");
 
-// 🟢 CREATE yoki UPDATE USER
+
 exports.createOrUpdateUser = async (req, res) => {
   try {
     const {
@@ -23,13 +23,13 @@ exports.createOrUpdateUser = async (req, res) => {
     } = req.body;
 
     let user = await User.findOne({ name, carNumber });
-  let priceNum = parseFloat(price) || 0;
-let decSum = parseFloat(DecreptedSumma) || 0;
+    let priceNum = parseFloat(price) || 0;
+    let decSum = parseFloat(DecreptedSumma) || 0;
 
-// hisoblash
-let sum = priceNum - decSum;
-sum = Math.round(sum * 0.01); // 1% ni olish
-console.log(sum);
+    // hisoblash
+    let sum = priceNum - decSum;
+    sum = Math.round(sum * 0.01); // 1% ni olish
+    
     const historyItem = {
       klameter,
       oilBrand,
@@ -43,12 +43,14 @@ console.log(sum);
       cost: parseFloat(cost) || 0,
       master: master || "Asosiy usta"
     };
-    
-    
 
     if (user){
+      if (phone) user.phone = phone;
+      if (carBrand) user.carBrand = carBrand;
+
       user.history.push(historyItem);
-      user.cash = (Number(user.cash) || 0) + sum;
+      user.cash = (Number(user.cash) || 0) - decSum + sum;
+      
       await user.save();
       res.status(200).json(user);
     } else {
@@ -85,7 +87,7 @@ exports.getUserById = async (req, res) => {
   }
 };
 
-// 🟢 GET USER HISTORY
+
 exports.getUserHistory = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -144,11 +146,16 @@ exports.addHistory = async (req, res) => {
 
     const user = await User.findById(req.params.id);
 
-    let sum = price - DecreptedSumma;
+    let priceNum = parseFloat(price) || 0;
+    let decSum = parseFloat(DecreptedSumma) || 0;
+    let sum = priceNum - decSum;
     sum = Math.round(sum * 0.01);
+
     if (!user) return res.status(404).json({ error: "Topilmadi" });
+    
     user.history.push(historyItem);
-    user.cash += sum;
+    user.cash = (Number(user.cash) || 0) - decSum + sum;
+    
     await user.save();
     res.json(user);
   } catch (err) {
@@ -277,13 +284,16 @@ exports.updateChatId = async (req, res) => {
 
 exports.getUserBalance = async (req, res) => {
   try {
-    const { id } = req.query;
+    const { chatId } = req.query;
 
-    if (!id) {
+    if (!chatId) {
       return res.status(400).json({ error: "ID yuborilmagan" });
     }
-
-    const user = await User.findOne({chatId: id});
+    console.log(req.query);
+    
+    const user = await User.findOne({chatId: chatId});
+    console.log(user);
+    
     if (!user) return res.status(404).json({ error: "Topilmadi" });
 
     res.json({ balance: user.cash });

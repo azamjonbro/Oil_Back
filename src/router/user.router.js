@@ -17,6 +17,7 @@ const {
   confirmNotification,
   getClientStats
 } = require("../controllers/user.controllers");
+const data = require("../utils/notifyAdmin");
 
 router.post("/", createOrUpdateUser);
 router.get("/", getAllUsers);
@@ -33,5 +34,7 @@ router.put("/:id", addHistory);
 router.delete("/:id", deleteUser);
 router.post("/:id/reset-cash", resetUserCashById);
 router.post("/:id/decrement-cash", decrementUserCashById);
+
+router.post("/notify-admin", data.notifyPostAdminIfSelectDate)
 
 module.exports = router;
