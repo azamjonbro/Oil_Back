@@ -13,17 +13,21 @@ const {
   getChatidById,
   updateChatId,
   getUserBalance,
-  getUserOilHistory
+  getUserOilHistory,
+  confirmNotification,
+  getClientStats
 } = require("../controllers/user.controllers");
 const data = require("../utils/notifyAdmin");
 
 router.post("/", createOrUpdateUser);
 router.get("/", getAllUsers);
+router.get("/stats", getClientStats);
 router.get("/chatId", getChatidById);
 router.put("/chatId", updateChatId);
 router.get("/getballance", getUserBalance);
 router.post("/phone", getUserPhoneById);
 router.get("/history", getUserOilHistory)
+router.post("/:id/confirm-notification", confirmNotification);
 router.get("/:id", getUserById);
 router.get("/:id/history", getUserHistory);
 router.put("/:id", addHistory);

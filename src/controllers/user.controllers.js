@@ -17,7 +17,9 @@ exports.createOrUpdateUser = async (req, res) => {
       airFilter,
       cabinFilter,
       notificationDate,
-      DecreptedSumma
+      DecreptedSumma,
+      cost,
+      master
     } = req.body;
 
     let user = await User.findOne({ name, carNumber });
@@ -38,6 +40,8 @@ exports.createOrUpdateUser = async (req, res) => {
       oilFilter,
       airFilter,
       cabinFilter,
+      cost: parseFloat(cost) || 0,
+      master: master || "Asosiy usta"
     };
 
     if (user){
@@ -119,8 +123,9 @@ exports.addHistory = async (req, res) => {
     oilFilter,
     airFilter,
     cabinFilter,
-    DecreptedSumma
-
+    DecreptedSumma,
+    cost,
+    master
   } = req.body;
 
   const historyItem = {
@@ -133,6 +138,8 @@ exports.addHistory = async (req, res) => {
     oilFilter,
     airFilter,
     cabinFilter,
+    cost: parseFloat(cost) || 0,
+    master: master || "Asosiy usta"
   };
 
   try {
@@ -290,6 +297,97 @@ exports.getUserBalance = async (req, res) => {
     if (!user) return res.status(404).json({ error: "Topilmadi" });
 
     res.json({ balance: user.cash });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// 🟢 CONFIRM NOTIFICATION
+exports.confirmNotification = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return res.status(404).json({ error: "Topilmadi" });
+    if (!user.history || user.history.length === 0) {
+      return res.status(400).json({ error: "Servis tarixi topilmadi" });
+    }
+
+    const latest = user.history[user.history.length - 1];
+    
+    // Set notificationDate to nextChangeAt, or today + 30 days if nextChangeAt is invalid or has passed
+    let nextDate = latest.nextChangeAt ? new Date(latest.nextChangeAt) : null;
+    if (!nextDate || isNaN(nextDate.getTime()) || nextDate <= new Date()) {
+      nextDate = new Date();
+      nextDate.setDate(nextDate.getDate() + 30);
+    }
+
+    latest.notificationDate = nextDate;
+    await user.save();
+
+    res.json({ message: "Notification tasdiqlandi ✅", notificationDate: latest.notificationDate });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// 🟢 GET STATISTICS
+exports.getClientStats = async (req, res) => {
+  try {
+    const users = await User.find();
+    const totalClients = users.length;
+
+    let needNotificationCount = 0;
+    let todayCount = 0;
+    let overdueCount = 0;
+    let thisMonthCount = 0;
+    let completedNotifications = 0;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    users.forEach((user) => {
+      if (!user.history || user.history.length === 0) return;
+      const latest = user.history[user.history.length - 1];
+
+      const notifDate = latest.notificationDate ? new Date(latest.notificationDate) : null;
+      const nextChange = latest.nextChangeAt ? new Date(latest.nextChangeAt) : null;
+
+      // Check if notification is due: empty/missing notificationDate OR <= today
+      const isDue = !notifDate || notifDate <= new Date();
+
+      if (isDue) {
+        needNotificationCount++;
+
+        // Overdue if nextChangeAt has passed
+        if (nextChange && nextChange < new Date()) {
+          overdueCount++;
+        }
+
+        if (notifDate) {
+          const d = new Date(notifDate);
+          d.setHours(0, 0, 0, 0);
+          if (d.getTime() === today.getTime()) {
+            todayCount++;
+          }
+          if (d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear()) {
+            thisMonthCount++;
+          }
+        } else {
+          // Empty notificationDate is treated as due today
+          todayCount++;
+        }
+      } else {
+        completedNotifications++;
+      }
+    });
+
+    res.json({
+      totalClients,
+      needNotification: needNotificationCount,
+      today: todayCount,
+      overdue: overdueCount,
+      thisMonth: thisMonthCount,
+      completedNotifications,
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
