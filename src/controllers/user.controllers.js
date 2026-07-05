@@ -348,7 +348,9 @@ exports.getClientStats = async (req, res) => {
       if (!user.history || user.history.length === 0) return;
       const latest = user.history[user.history.length - 1];
 
-      const notifDate = latest.notificationDate ? new Date(latest.notificationDate) : null;
+      const notifDate = latest.notificationDate 
+        ? new Date(latest.notificationDate) 
+        : (latest.nextChangeAt ? new Date(latest.nextChangeAt) : null);
       const nextChange = latest.nextChangeAt ? new Date(latest.nextChangeAt) : null;
 
       // Check if notification is due: empty/missing notificationDate OR <= today

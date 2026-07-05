@@ -80,9 +80,10 @@ async function notifyAdminIfOilChangeDue() {
     if (lastIndex < 0) continue;
 
     const latest = user.history[lastIndex];
-    if (!latest?.notificationDate) continue;
+    const targetNotifDate = latest?.notificationDate || latest?.nextChangeAt;
+    if (!targetNotifDate) continue;
 
-    const notifStr = new Date(latest.notificationDate).toISOString().slice(0, 10);
+    const notifStr = new Date(targetNotifDate).toISOString().slice(0, 10);
 
     if (notifStr !== todayStr) continue;
     if (latest.notified === true) continue;
