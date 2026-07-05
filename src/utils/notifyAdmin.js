@@ -58,7 +58,7 @@ function formatDate(date) {
     String(d.getDate()).padStart(2, "0"),
     String(d.getMonth() + 1).padStart(2, "0"),
     d.getFullYear(),
-  ].join("-");
+  ].join(".");
 }
 
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
@@ -102,14 +102,20 @@ async function notifyAdminIfOilChangeDue() {
     try {
       if (user.chatId) {
         // Userga to'g'ridan-to'g'ri yuborish
-        await bot.sendMessage(user.chatId, text, {
-          parse_mode: "Markdown",
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: "📋 Batafsil", callback_data: `load_${user._id}` }],
-            ],
-          },
-        });
+        const userText = `Assalomu alaykum ${user.name}.
+${user.carBrand || ""} / ${user.carNumber || ""}
+Eslatib o'tamiz.
+
+Oxirgi moy almashtirish: ${formatDate(latest.filledAt)} da amalga oshirilgan.
+
+Keyingi moy almashtirish tavsiya etilgan sana:
+${formatDate(latest.nextChangeAt)}
+${parseInt(latest.klameter || 0) + 8000} km masofada
+Avtomobilingizga xizmat ko'rsatish vaqti keldi.
+
+Sizni servisimizda kutamiz.`;
+
+        await bot.sendMessage(user.chatId, userText);
         console.log(`✅ Userga yuborildi: ${user.name}`);
       } else {
         // chatId yo'q — adminga yuborish
