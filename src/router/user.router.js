@@ -15,7 +15,8 @@ const {
   getUserBalance,
   getUserOilHistory,
   confirmNotification,
-  getClientStats
+  getClientStats,
+  editUser
 } = require("../controllers/user.controllers");
 const data = require("../utils/notifyAdmin");
 
@@ -31,6 +32,7 @@ router.post("/:id/confirm-notification", confirmNotification);
 router.get("/:id", getUserById);
 router.get("/:id/history", getUserHistory);
 router.put("/:id", addHistory);
+router.put("/:id/edit", editUser);
 router.delete("/:id", deleteUser);
 router.post("/:id/reset-cash", resetUserCashById);
 router.post("/:id/decrement-cash", decrementUserCashById);
