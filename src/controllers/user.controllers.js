@@ -394,3 +394,23 @@ exports.getClientStats = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// 🟢 EDIT USER DETAILS
+exports.editUser = async (req, res) => {
+  try {
+    const { name, phone, carNumber, carBrand } = req.body;
+    const user = await User.findById(req.params.id);
+    
+    if (!user) return res.status(404).json({ error: "Topilmadi" });
+
+    if (name) user.name = name;
+    if (phone) user.phone = phone;
+    if (carNumber) user.carNumber = carNumber;
+    if (carBrand) user.carBrand = carBrand;
+
+    await user.save();
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
